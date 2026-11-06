@@ -1,0 +1,58 @@
+{
+  "independent": {
+    "points": 1156,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.8970588235294118,
+    "hmm_accuracy_given_match": 0.8970588235294118,
+    "nearest_accuracy": 0.8157439446366782,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.06371297162631151,
+    "trajectories": 30,
+    "failed_trajectories": 0,
+    "mean_gps_rmse": 11.291277513940683,
+    "mean_runtime_seconds": 0.015113536669135404,
+    "mean_trajectory_accuracy": 0.8974952584163113
+  },
+  "burst": {
+    "points": 1156,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.8226643598615917,
+    "hmm_accuracy_given_match": 0.8226643598615917,
+    "nearest_accuracy": 0.7370242214532872,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.10596461698596087,
+    "trajectories": 30,
+    "failed_trajectories": 0,
+    "mean_gps_rmse": 15.107585533929484,
+    "mean_runtime_seconds": 0.015168679999381615,
+    "mean_trajectory_accuracy": 0.8224917022285444
+  },
+  "matched_iid": {
+    "points": 1156,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.8494809688581315,
+    "hmm_accuracy_given_match": 0.8494809688581315,
+    "nearest_accuracy": 0.7491349480968859,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.0768031771871859,
+    "trajectories": 30,
+    "failed_trajectories": 0,
+    "mean_gps_rmse": 15.107585533929484,
+    "mean_runtime_seconds": 0.015719319997394145,
+    "mean_trajectory_accuracy": 0.8503259838786155
+  },
+  "gap": {
+    "points": 976,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.8811475409836066,
+    "hmm_accuracy_given_match": 0.8811475409836066,
+    "nearest_accuracy": 0.8094262295081968,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.07476852252531066,
+    "trajectories": 30,
+    "failed_trajectories": 0,
+    "mean_gps_rmse": 11.19308846592773,
+    "mean_runtime_seconds": 0.01221404666818368,
+    "mean_trajectory_accuracy": 0.8816038108791904
+  }
+}

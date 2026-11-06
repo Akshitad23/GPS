@@ -1,0 +1,55 @@
+{
+  "config": {
+    "noise_kind": "independent",
+    "noise_sigma": 8.0,
+    "assumed_sigma": 8.0,
+    "transition_beta": 15.0,
+    "candidate_radius": 60.0,
+    "max_speed": 35.0,
+    "projection_slack_sigma": 3.0,
+    "road_separation": 32.0,
+    "sample_interval": 1.0,
+    "speed": 8.0,
+    "burst_offset": 20.0,
+    "burst_points": 10,
+    "gap_points": 6,
+    "route_variant": 2,
+    "model": "baseline",
+    "motion_scale": 10.0,
+    "speed_uncertainty": 2.0,
+    "heading_weight": 0.5,
+    "student_df": 4.0,
+    "bias_levels": [
+      -30.0,
+      -15.0,
+      0.0,
+      15.0,
+      30.0
+    ],
+    "bias_prior_sigma": 20.0,
+    "initial_bias_sigma": 5.0,
+    "bias_jump_probability": 0.04,
+    "burst_angle_degrees": 90.0,
+    "burst_start_fraction": 0.5
+  },
+  "seed": 10002,
+  "trajectory_id": "independent_r2_seed10002_9aea4a9ea5",
+  "metrics": {
+    "points": 42,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.8571428571428571,
+    "hmm_accuracy_given_match": 0.8571428571428571,
+    "nearest_accuracy": 0.8333333333333334,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.07352308723161137,
+    "gps_rmse": 10.189416395060213,
+    "runtime_seconds": 0.039796600001864135
+  },
+  "failure": null,
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "scipy": "1.14.1",
+    "matplotlib": "3.9.2"
+  }
+}

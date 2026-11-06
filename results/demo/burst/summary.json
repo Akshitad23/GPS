@@ -1,0 +1,38 @@
+{
+  "config": {
+    "noise_kind": "burst",
+    "noise_sigma": 8.0,
+    "assumed_sigma": 8.0,
+    "transition_beta": 15.0,
+    "candidate_radius": 60.0,
+    "max_speed": 35.0,
+    "projection_slack_sigma": 3.0,
+    "road_separation": 20.0,
+    "sample_interval": 1.0,
+    "speed": 8.0,
+    "burst_offset": 20.0,
+    "burst_points": 10,
+    "gap_points": 6,
+    "route_variant": 0
+  },
+  "seed": 42,
+  "trajectory_id": "burst_r0_seed42_b3e7c84e4a",
+  "metrics": {
+    "points": 37,
+    "matched_fraction": 1.0,
+    "hmm_accuracy": 0.9459459459459459,
+    "hmm_accuracy_given_match": 0.9459459459459459,
+    "nearest_accuracy": 0.5945945945945946,
+    "candidate_recall": 1.0,
+    "brier_given_match": 0.06865281568826619,
+    "gps_rmse": 17.38525865741981,
+    "runtime_seconds": 0.014593600004445761
+  },
+  "failure": null,
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "scipy": "1.14.1",
+    "matplotlib": "3.9.2"
+  }
+}
