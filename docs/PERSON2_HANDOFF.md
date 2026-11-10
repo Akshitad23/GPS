@@ -49,14 +49,16 @@ Show roads, simulated ground truth, GPS observations, predicted segments and rej
 
 ## Completion checklist
 
-- [ ] Reproduced a Part 1 run and tests.
-- [ ] Frozen and documented trajectory splits and seeds.
-- [ ] All failures counted explicitly.
-- [ ] Raw and calibrated probability metrics reported separately from rejection ranking.
-- [ ] Noise magnitude reported when comparing independent and burst errors.
-- [ ] Results include several trajectories and seeds.
-- [ ] Demo uses the same inference code as experiments.
-- [ ] Report makes no unsupported novelty or performance claims.
+- [x] Reproduced a Part 1 run and tests.
+- [x] Frozen and documented trajectory splits and seeds.
+- [x] All failures counted explicitly.
+- [x] Raw and calibrated probability metrics reported separately from rejection ranking.
+- [x] Noise magnitude reported when comparing independent and burst errors.
+- [x] Results include several trajectories and seeds.
+- [x] Demo uses the same inference code as experiments.
+- [x] Report makes no unsupported novelty or performance claims.
+
+Status (10 November 2026): all items done. See docs/PERSON2_RESULTS.md, results/calibration_study and `python -m gpsmatch.demo_server`.
 
 ## Implemented Part 1 interface
 

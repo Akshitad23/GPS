@@ -1,0 +1,96 @@
+{
+  "platt_independent": {
+    "kind": "platt",
+    "a": 1.70718871285362,
+    "b": 1.105466639834398,
+    "converged": true,
+    "train_log_loss": 0.1272935050179793,
+    "train_population": 1390,
+    "population": "independent",
+    "trajectories": 36,
+    "observations": 1390,
+    "matched_used": 1390,
+    "unmatched_excluded": 0
+  },
+  "isotonic_independent": {
+    "kind": "isotonic",
+    "thresholds": [
+      0.2816300466320869,
+      0.2951775141375699,
+      0.32383450247888,
+      0.35349329958028625,
+      0.3900537873353442,
+      0.5684035712382949,
+      0.581430824548251,
+      0.7122824249291856,
+      0.7738210077723087,
+      0.8400270525088822
+    ],
+    "values": [
+      1e-06,
+      0.3333333333333333,
+      0.5,
+      0.5833333333333334,
+      0.7169811320754716,
+      0.8571428571428571,
+      0.9382716049382716,
+      0.9473684210526315,
+      0.972972972972973,
+      0.999999
+    ],
+    "blocks": 10,
+    "train_population": 1390,
+    "population": "independent",
+    "trajectories": 36,
+    "observations": 1390,
+    "matched_used": 1390,
+    "unmatched_excluded": 0
+  },
+  "platt_mixture": {
+    "kind": "platt",
+    "a": 0.4423127777917848,
+    "b": 0.5935409524310293,
+    "converged": true,
+    "train_log_loss": 0.31947180930110136,
+    "train_population": 1390,
+    "population": "mixture",
+    "trajectories": 36,
+    "observations": 1390,
+    "matched_used": 1390,
+    "unmatched_excluded": 0
+  },
+  "isotonic_mixture": {
+    "kind": "isotonic",
+    "thresholds": [
+      0.1651303856971574,
+      0.2764037115774242,
+      0.3900537873353442,
+      0.5423096389863934,
+      0.5677479479753429,
+      0.5736212272237876,
+      0.9163476433188442,
+      0.9697383684364274,
+      0.9990557001833832,
+      0.9997051488457175
+    ],
+    "values": [
+      1e-06,
+      0.3625,
+      0.6405228758169934,
+      0.7142857142857143,
+      0.75,
+      0.8249027237354085,
+      0.8888888888888888,
+      0.9419795221843004,
+      0.9578947368421052,
+      0.999999
+    ],
+    "blocks": 10,
+    "train_population": 1390,
+    "population": "mixture",
+    "trajectories": 36,
+    "observations": 1390,
+    "matched_used": 1390,
+    "unmatched_excluded": 0
+  }
+}

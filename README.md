@@ -15,6 +15,21 @@ python -m gpsmatch benchmark --seeds 30 --output results/benchmark_with_slack
 
 The demo writes a static comparison figure and CSV/JSON outputs. It is not yet an interactive application.
 
+## Person 2: calibration study and interactive demo
+
+```powershell
+python -m unittest discover -s tests -v
+python -m gpsmatch.study all --output results/calibration_study   # frozen splits, fit, evaluate (~2 min)
+python -m gpsmatch.demo_server                                      # open http://127.0.0.1:8765
+```
+
+- `gpsmatch/evaluation.py`: matcher-independent metrics (accuracy, unmatched rate, candidate recall, Brier, log loss, ECE, reliability tables, tie-aware risk–coverage, threshold transfer, journey-group bootstrap).
+- `gpsmatch/calibration.py`: Platt (2-parameter) and isotonic calibration maps.
+- `gpsmatch/study.py`: frozen development/calibration/test seed blocks, independent-only vs mixture calibration fits, test evaluation, slack sensitivity, figures and `results.md`.
+- `gpsmatch/demo_server.py`: local offline demo calling the same `run_pipeline`.
+
+Results and discussion: [docs/PERSON2_RESULTS.md](docs/PERSON2_RESULTS.md).
+
 ## API
 
 ```python
