@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPS Map-Matching Demo</title>
+<style>
+:root {
+  --bg: #f6f6f3; --panel: #ffffff; --ink: #1d1f22; --muted: #63676d; --line: #dcdcd6;
+  --road: #c9cbc4; --truth: #2f8a4b; --gps: #6b6f76; --ok: #2b64c6; --bad: #d1462f;
+  --rej: #b58a00; --accent: #2b64c6;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #15171a; --panel: #1e2125; --ink: #e8e8e6; --muted: #9a9ea5; --line: #33373d;
+          --road: #3c4047; --truth: #5cc27c; --gps: #8d9199; --ok: #6c9ff0; --bad: #f0735c; --rej: #e0b53a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 18px 20px 6px; }
+h1 { font-size: 19px; margin: 0 0 2px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+         padding: 2px 8px; border-radius: 99px; background: var(--rej); color: #111; margin-left: 8px;
+         vertical-align: middle; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 980px; }
+main { display: grid; grid-template-columns: 290px 1fr; gap: 16px; padding: 12px 20px 24px; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 3px; }
+label output { float: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type=range], select, input[type=number] { width: 100%; }
+select, input[type=number] { padding: 5px; border-radius: 6px; border: 1px solid var(--line);
+                             background: var(--bg); color: var(--ink); }
+.row2 { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: end; }
+button { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg);
+         color: var(--ink); cursor: pointer; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+.tile .k { font-size: 11px; color: var(--muted); }
+.tile .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 11px; color: var(--muted); }
+#map { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px;
+                       border-radius: 50%; vertical-align: -1px; background: var(--c); }
+.note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.err { color: var(--bad); font-weight: 600; }
+#strip { width: 100%; height: 70px; display: block; margin-top: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Confidence-aware HMM map matching <span class="badge">OFFLINE · SYNTHETIC</span></h1>
+  <p>Each change re-runs the project's own <code>run_pipeline</code> on a simulated journey. Confidence is the
+  forward–backward posterior of the selected physical road segment, so it uses <em>future</em> observations too:
+  this is offline smoothing, not live navigation.</p>
+  <p><a href="/junction" style="color:inherit">Open the junction assistant replay</a></p>
+</header>
+<main>
+  <section class="panel" aria-label="Controls">
+    <label>Model</label>
+    <select id="model"><option>baseline</option><option>motion</option><option>robust</option><option>bias</option></select>
+    <label>Noise kind</label>
+    <select id="noise_kind"><option>burst</option><option>independent</option><option>matched_iid</option><option>gap</option></select>
+    <label>Route variant</label>
+    <select id="route_variant"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+    <label>Random seed</label>
+    <div class="row2"><input id="seed" type="number" value="42" min="0" step="1"><button id="next">Next</button></div>
+    <label>Noise σ per axis (m) <output id="noise_sigma_o"></output></label>
+    <input id="noise_sigma" type="range" min="0" max="25" step="0.5" value="8">
+    <label>Burst length (observations) <output id="burst_points_o"></output></label>
+    <input id="burst_points" type="range" min="0" max="40" step="1" value="10">
+    <label>Burst offset (m) <output id="burst_offset_o"></output></label>
+    <input id="burst_offset" type="range" min="0" max="50" step="1" value="20">
+    <label>Burst direction (degrees) <output id="burst_angle_degrees_o"></output></label>
+    <input id="burst_angle_degrees" type="range" min="-180" max="180" step="15" value="90">
+    <label>Confidence score</label>
+    <select id="score"><option value="raw">raw posterior</option><option value="calibrated">calibrated (Platt, mixture fit)</option></select>
+    <label>Acceptance threshold <output id="threshold_o"></output></label>
+    <input id="threshold" type="range" min="0" max="1" step="0.01" value="0.9">
+    <p class="note" id="calnote"></p>
+    <p class="note">Burst controls only matter for <em>burst</em> and <em>matched_iid</em>. Points whose score is
+    below the threshold, and every point of a failed (unmatched) journey, are rejected but stay in the coverage
+    denominator.</p>
+  </section>
+  <section>
+    <div class="tiles" id="tiles"></div>
+    <div class="panel">
+      <svg id="map" role="img" aria-label="Road map with truth, GPS and predictions"></svg>
+      <div class="legend">
+        <span style="--c:var(--truth)">simulated truth</span>
+        <span style="--c:var(--gps)">GPS observation (ring = burst)</span>
+        <span style="--c:var(--ok)">accepted, correct segment</span>
+        <span style="--c:var(--bad)">accepted, wrong segment</span>
+        <span style="--c:var(--rej)">rejected (below threshold / unmatched)</span>
+      </div>
+      <svg id="strip" role="img" aria-label="Confidence over time"></svg>
+      <p class="note" id="info"></p>
+    </div>
+  </section>
+</main>
+<script>
+const ids = ["model","noise_kind","route_variant","seed","noise_sigma","burst_points","burst_offset",
+             "burst_angle_degrees","score","threshold"];
+const $ = id => document.getElementById(id);
+const pct = v => v == null ? "n/a" : (100*v).toFixed(1) + "%";
+let timer = null, last = 0;
+
+function query() {
+  return ids.map(k => `${k}=${encodeURIComponent($(k).value)}`).join("&");
+}
+function schedule() {
+  ids.forEach(k => { const o = $(k + "_o"); if (o) o.textContent = $(k).value; });
+  clearTimeout(timer); timer = setTimeout(load, 120);
+}
+async function load() {
+  const ticket = ++last;
+  const response = await fetch("/api/run?" + query());
+  const data = await response.json();
+  if (ticket !== last) return;
+  if (!response.ok) { $("info").innerHTML = `<span class="err">${data.error}</span>`; return; }
+  render(data);
+}
+function tile(k, v, s) { return `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`; }
+function render(d) {
+  const m = d.metrics;
+  $("tiles").innerHTML =
+    tile("Segment accuracy", pct(m.accuracy), `nearest road ${pct(m.nearest_accuracy)}`) +
+    tile("Coverage", pct(m.coverage), `${m.accepted} of ${m.points} accepted`) +
+    tile("Accepted risk", m.accepted_risk == null ? "undefined" : pct(m.accepted_risk), "errors among accepted") +
+    tile("Candidate recall", pct(m.candidate_recall), "true segment available") +
+    tile("Failure rate", pct(m.failure_rate), d.failure ? "journey unmatched" : "unmatched points") +
+    tile("GPS RMSE", m.gps_rmse.toFixed(1) + " m", "radial");
+  $("calnote").textContent = d.calibrator_available ? `Score in use: ${d.score_kind}.`
+    : "No calibration study found (run python -m gpsmatch.study all); calibrated option falls back to raw.";
+  drawMap(d); drawStrip(d);
+  $("info").innerHTML = `Trajectory <code>${d.trajectory_id}</code>, seed ${d.seed}.` +
+    (d.failure ? ` <span class="err">Failure: ${d.failure}</span>` : "");
+}
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function drawMap(d) {
+  const svg = $("map"), xs = [], ys = [];
+  d.segments.forEach(s => { xs.push(s.a[0], s.b[0]); ys.push(s.a[1], s.b[1]); });
+  d.points.forEach(p => { xs.push(p.gps[0]); ys.push(p.gps[1]); });
+  const pad = 12, x0 = Math.min(...xs)-pad, x1 = Math.max(...xs)+pad, y0 = Math.min(...ys)-pad, y1 = Math.max(...ys)+pad;
+  svg.setAttribute("viewBox", `${x0} ${-y1} ${x1-x0} ${y1-y0}`);
+  const Y = y => -y, out = [];
+  d.segments.forEach(s => out.push(`<line x1="${s.a[0]}" y1="${Y(s.a[1])}" x2="${s.b[0]}" y2="${Y(s.b[1])}" stroke="${css('--road')}" stroke-width="4" stroke-linecap="round"><title>segment ${s.id}</title></line>`));
+  d.segments.forEach(s => out.push(`<text x="${(s.a[0]+s.b[0])/2}" y="${Y((s.a[1]+s.b[1])/2)-3}" font-size="5" fill="${css('--muted')}" text-anchor="middle">${s.id}</text>`));
+  out.push(`<polyline fill="none" stroke="${css('--truth')}" stroke-width="1.6" points="${d.points.map(p => `${p.true[0]},${Y(p.true[1])}`).join(" ")}"/>`);
+  d.points.forEach(p => {
+    const color = !p.accepted ? css('--rej') : p.correct ? css('--ok') : css('--bad');
+    const tip = `t=${p.t}s\ntrue ${p.true_segment}, selected ${p.selected_segment || "—"}, nearest ${p.nearest_segment || "—"}\n` +
+      `raw confidence ${p.confidence == null ? "—" : p.confidence.toFixed(3)}, score ${p.score == null ? "—" : p.score.toFixed(3)}\n` +
+      `${p.candidates} candidate segments; ${p.accepted ? "accepted" : "rejected"}${p.burst ? "; burst" : ""}`;
+    out.push(`<line x1="${p.gps[0]}" y1="${Y(p.gps[1])}" x2="${(p.sel||p.gps)[0]}" y2="${Y((p.sel||p.gps)[1])}" stroke="${css('--gps')}" stroke-width=".3" opacity=".6"/>`);
+    out.push(`<circle cx="${p.gps[0]}" cy="${Y(p.gps[1])}" r="1.3" fill="${css('--gps')}" ${p.burst ? `stroke="${css('--bad')}" stroke-width=".7"` : ""}/>`);
+    const at = p.sel || p.gps;
+    out.push(`<circle cx="${at[0]}" cy="${Y(at[1])}" r="2" fill="${p.sel ? color : "none"}" stroke="${color}" stroke-width=".8"><title>${tip}</title></circle>`);
+  });
+  svg.innerHTML = out.join("");
+}
+function drawStrip(d) {
+  const svg = $("strip"), w = 1000, h = 70, n = d.points.length, th = +$("threshold").value;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`); svg.setAttribute("preserveAspectRatio", "none");
+  const bw = w / Math.max(n, 1), out = [];
+  d.points.forEach((p, i) => {
+    if (p.burst) out.push(`<rect x="${i*bw}" y="0" width="${bw}" height="${h}" fill="${css('--bad')}" opacity=".08"/>`);
+    const s = p.score == null ? 0 : p.score, color = !p.accepted ? css('--rej') : p.correct ? css('--ok') : css('--bad');
+    out.push(`<rect x="${i*bw+bw*.15}" y="${h-s*(h-4)}" width="${bw*.7}" height="${s*(h-4)}" fill="${color}"><title>t=${p.t}s score ${p.score == null ? "none" : p.score.toFixed(3)}</title></rect>`);
+  });
+  out.push(`<line x1="0" x2="${w}" y1="${h-th*(h-4)}" y2="${h-th*(h-4)}" stroke="${css('--ink')}" stroke-dasharray="6 4" stroke-width="1"/>`);
+  svg.innerHTML = out.join("");
+}
+ids.forEach(k => $(k).addEventListener("input", schedule));
+$("next").addEventListener("click", () => { $("seed").value = (+$("seed").value || 0) + 1; schedule(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", load);
+schedule();
+</script>
+</body>
+</html>

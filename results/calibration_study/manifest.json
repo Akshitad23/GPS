@@ -1,0 +1,209 @@
+{
+  "protocol": "Person 2 calibration study: frozen splits, calibration fitting and evaluation.\n\nUsage (from the GPS directory):\n\n    python -m gpsmatch.study run     --output results/calibration_study\n    python -m gpsmatch.study analyse --output results/calibration_study\n\n``run`` writes a manifest BEFORE inference and refuses to reuse a directory.\nIt only calls the existing ``run_pipeline``; predictions are never altered.\n``analyse`` reads the saved prediction CSVs back (explicit boolean parsing),\nfits calibration maps on calibration journeys only, and evaluates them on the\nuntouched test journeys. It can be re-run; it overwrites only analysis outputs.\n\nProtocol (frozen here and copied into the manifest):\n\n* A \"journey group\" is one seed. All noise scenarios of that seed share the\n  same simulated truth journey (route variant and start phase), so a group's\n  variants always stay in the same split and bootstrap intervals resample\n  whole groups.\n* Development, calibration and test use disjoint seed blocks. Development is\n  used only for the screening-slack sensitivity check and sanity checks.\n* Calibration maps are fitted on (a) independent-noise calibration journeys\n  and (b) a mixture of independent and burst calibration journeys with the\n  same number of trajectories. Both are evaluated on the same test journeys.\n* Test also includes burst types that neither fit population contains\n  (burst_long, burst_negative) and a magnitude-matched independent control.\n",
+  "splits": {
+    "development": [
+      40000,
+      40001,
+      40002,
+      40003,
+      40004,
+      40005,
+      40006,
+      40007,
+      40008,
+      40009,
+      40010,
+      40011
+    ],
+    "calibration": [
+      50000,
+      50001,
+      50002,
+      50003,
+      50004,
+      50005,
+      50006,
+      50007,
+      50008,
+      50009,
+      50010,
+      50011,
+      50012,
+      50013,
+      50014,
+      50015,
+      50016,
+      50017,
+      50018,
+      50019,
+      50020,
+      50021,
+      50022,
+      50023,
+      50024,
+      50025,
+      50026,
+      50027,
+      50028,
+      50029,
+      50030,
+      50031,
+      50032,
+      50033,
+      50034,
+      50035
+    ],
+    "test": [
+      60000,
+      60001,
+      60002,
+      60003,
+      60004,
+      60005,
+      60006,
+      60007,
+      60008,
+      60009,
+      60010,
+      60011,
+      60012,
+      60013,
+      60014,
+      60015,
+      60016,
+      60017,
+      60018,
+      60019,
+      60020,
+      60021,
+      60022,
+      60023,
+      60024,
+      60025,
+      60026,
+      60027,
+      60028,
+      60029,
+      60030,
+      60031,
+      60032,
+      60033,
+      60034,
+      60035
+    ]
+  },
+  "scenarios": {
+    "independent": {
+      "noise_kind": "independent"
+    },
+    "burst": {
+      "noise_kind": "burst",
+      "burst_offset": 20.0
+    },
+    "burst_diagonal": {
+      "noise_kind": "burst",
+      "burst_offset": 28.0,
+      "burst_angle_degrees": 45.0
+    },
+    "burst_negative": {
+      "noise_kind": "burst",
+      "burst_offset": 25.0,
+      "burst_angle_degrees": -90.0
+    },
+    "burst_long": {
+      "noise_kind": "burst",
+      "burst_offset": 28.0,
+      "burst_points": 18,
+      "burst_start_fraction": 0.3
+    },
+    "matched_iid": {
+      "noise_kind": "matched_iid",
+      "burst_offset": 20.0
+    },
+    "gap": {
+      "noise_kind": "gap"
+    }
+  },
+  "models": [
+    "baseline",
+    "robust"
+  ],
+  "mixture_rule": "calibration group i uses ['independent', 'independent', 'burst', 'burst_diagonal'][i % 4]",
+  "route_rule": "route_variant = index within split % 6",
+  "slack_sensitivity": {
+    "split": "development",
+    "model": "baseline",
+    "values": [
+      0.0,
+      1.0,
+      2.0,
+      3.0,
+      5.0
+    ],
+    "scenarios": [
+      "independent",
+      "burst",
+      "burst_long",
+      "gap"
+    ]
+  },
+  "target_risk": 0.05,
+  "coverages": [
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "route_holdout": {
+    "fit_routes": [
+      0,
+      1,
+      2
+    ],
+    "test_routes": [
+      3,
+      4,
+      5
+    ]
+  },
+  "base_config": {
+    "noise_kind": "independent",
+    "noise_sigma": 8.0,
+    "assumed_sigma": 8.0,
+    "transition_beta": 15.0,
+    "candidate_radius": 60.0,
+    "max_speed": 35.0,
+    "projection_slack_sigma": 3.0,
+    "road_separation": 20.0,
+    "sample_interval": 1.0,
+    "speed": 8.0,
+    "burst_offset": 20.0,
+    "burst_points": 10,
+    "gap_points": 6,
+    "route_variant": 0,
+    "model": "baseline",
+    "motion_scale": 10.0,
+    "speed_uncertainty": 2.0,
+    "heading_weight": 0.5,
+    "student_df": 4.0,
+    "bias_levels": [
+      -30.0,
+      -15.0,
+      0.0,
+      15.0,
+      30.0
+    ],
+    "bias_prior_sigma": 20.0,
+    "initial_bias_sigma": 5.0,
+    "bias_jump_probability": 0.04,
+    "burst_angle_degrees": 90.0,
+    "burst_start_fraction": 0.5
+  },
+  "versions": {
+    "python": "3.14.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.10.8"
+  }
+}

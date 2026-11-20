@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Junction assistant · GPS map matching</title>
+<style>
+  :root { color-scheme:light; --ink:#172b36; --muted:#50616a; --line:#dbe3e3; --blue:#235cbd; --paper:#f3f6f5; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 Inter, "Segoe UI", sans-serif; }
+  header, main, footer { width:min(1260px, calc(100% - 40px)); margin:auto; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:19px 0; border-bottom:1px solid var(--line); }
+  header strong { font-size:16px; }
+  a { color:#1952a5; text-underline-offset:3px; }
+  h1 { font-size:clamp(30px, 5vw, 43px); letter-spacing:-.045em; margin:0; line-height:1.1; }
+  h2 { font-size:17px; letter-spacing:-.015em; margin:0; }
+  p { margin:0; }
+  .intro { display:flex; align-items:end; justify-content:space-between; gap:20px; padding:25px 0 20px; }
+  .intro p { color:var(--muted); margin-top:5px; }
+  .scope { align-self:center; color:var(--muted); font-size:13px; }
+  .layout { display:grid; grid-template-columns:minmax(0, 2.3fr) minmax(270px, 1fr); gap:16px; align-items:start; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .card-head, .details, .summary, .chart-body { padding:15px 18px; }
+  .card-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+  select, button { font:inherit; border:1px solid #aab8bf; border-radius:7px; background:#fff; color:var(--ink); padding:7px 10px; }
+  select { max-width:100%; }
+  button { cursor:pointer; }
+  button:disabled { opacity:.46; cursor:default; }
+  button.primary { background:#1b477c; color:#fff; border-color:#1b477c; min-width:78px; }
+  :focus-visible { outline:3px solid #2f71d8; outline-offset:3px; }
+  .map { display:block; width:100%; height:auto; background:#eaf0ec; }
+  .map text { font-weight:650; paint-order:stroke; stroke:#f4f7f3; stroke-width:4px; stroke-linejoin:round; fill:var(--ink); }
+  .legend, .overlays, .controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px 15px; }
+  .legend, .overlays { padding:9px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+  .swatch { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; }
+  .controls { padding:12px 18px; border-top:1px solid var(--line); }
+  #scrub { flex:1 1 120px; accent-color:var(--blue); min-width:85px; }
+  #time { font-variant-numeric:tabular-nums; min-width:72px; text-align:right; }
+  input[type=checkbox] { accent-color:var(--blue); vertical-align:middle; }
+  .status { padding:15px 18px; background:#eef4ff; color:#154887; border-block:1px solid #dbe8fb; }
+  .status[data-status=uncertain] { background:#fff4da; color:#774b04; border-color:#f1dfb5; }
+  .status[data-status=passed], .status[data-status=waiting] { background:#f1f5f4; color:var(--ink); border-color:var(--line); }
+  .status strong { display:block; font-size:23px; line-height:1.16; letter-spacing:-.025em; }
+  .status p { margin-top:6px; font-size:13px; }
+  dl { margin:0; }
+  dl div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid #e9eded; }
+  dl div:last-child { border:0; }
+  dt { color:var(--muted); }
+  dd { margin:0; text-align:right; font-weight:650; }
+  .aside { display:grid; gap:16px; }
+  .summary h2 { margin-bottom:4px; }
+  .summary p, .note { color:var(--muted); font-size:13px; }
+  .chart { margin-top:16px; }
+  .chart-body { padding-top:0; }
+  .chart-key { display:flex; flex-wrap:wrap; gap:4px 14px; }
+  .chart-key .burst { display:inline-block; background:#fae7cf; width:12px; height:10px; margin-right:4px; }
+  .chart-key .prompt { color:var(--blue); font-weight:bold; }
+  #confidence { display:block; width:100%; height:124px; cursor:crosshair; }
+  #confidence text { fill:var(--muted); font-size:13px; }
+  .note { min-height:20px; }
+  footer { padding:13px 0 20px; color:var(--muted); font-size:13px; }
+  #load-status:not(:empty) { margin-bottom:12px; font-weight:650; }
+  [hidden] { display:none !important; }
+  @media (max-width:790px) {
+    .layout { grid-template-columns:1fr; }
+    .aside { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:540px) {
+    main, header, footer { width:calc(100% - 20px); }
+    .intro { display:block; }
+    .scope { display:block; margin-top:6px; }
+    .aside { grid-template-columns:1fr; }
+    .map text { font-size:20px; }
+  }
+</style>
+<script src="/junction.js" defer></script>
+</head>
+<body>
+<header><strong>GPS map matching</strong><a href="/">Calibration demo</a></header>
+<main>
+  <div class="intro">
+    <div><h1>Junction assistant</h1><p id="location">Hosur Road near Kudlu Gate, Bengaluru</p></div>
+    <span class="scope">Real junction · Simulated GPS replay</span>
+  </div>
+  <p id="load-status" role="status"></p>
+  <div class="layout">
+    <section class="card" aria-labelledby="junction-map-label">
+      <div class="card-head">
+        <h2 id="junction-map-label">Junction map</h2>
+        <select id="scenario" aria-label="Replay scenario">
+          <option value="clean">Clean approach</option>
+          <option value="drift-stay" selected>GPS drifts, stay on main road</option>
+          <option value="drift-exit">GPS drifts, take the exit</option>
+        </select>
+      </div>
+      <svg id="map" class="map" viewBox="0 0 760 280" role="img" aria-label="Junction map with planned route and current position estimates"></svg>
+      <div class="legend">
+        <span><i class="swatch" style="background:#235cbd"></i>Planned route</span>
+        <span><i class="swatch" style="background:#ab4960"></i>GPS reading</span>
+        <span><i class="swatch" style="background:#006353"></i>HMM estimate</span>
+      </div>
+      <div class="overlays">
+        <label><input id="truth" type="checkbox"> Show ground truth</label>
+        <label><input id="nearest" type="checkbox"> Compare nearest road</label>
+      </div>
+      <div class="controls">
+        <button type="button" class="primary" id="play" disabled>Play</button>
+        <button type="button" id="step" disabled>Step</button>
+        <button type="button" id="restart" disabled>Restart</button>
+        <input id="scrub" type="range" min="0" max="0" value="0" aria-label="Replay time" disabled>
+        <output id="time" for="scrub">0 / 0 s</output>
+      </div>
+    </section>
+    <div class="aside">
+      <section class="card" aria-labelledby="assistant-label">
+        <div class="card-head"><h2 id="assistant-label">Assistant</h2></div>
+        <div id="status" class="status" role="status" data-status="waiting">
+          <strong id="instruction">Waiting for replay</strong><p id="reason"></p>
+        </div>
+        <dl class="details">
+          <div><dt>Estimated current road</dt><dd id="road">—</dd></div>
+          <div><dt>Planned maneuver</dt><dd id="maneuver">—</dd></div>
+          <div><dt>Model confidence</dt><dd id="score">—</dd></div>
+        </dl>
+      </section>
+      <section class="card summary" aria-labelledby="summary-label">
+        <h2 id="summary-label">Trip summary</h2>
+        <p id="summary-note">Available at the end of the replay.</p>
+        <dl id="summary" hidden>
+          <div><dt>Wrong road · HMM</dt><dd id="hmm-wrong"></dd></div>
+          <div><dt>Wrong road · nearest</dt><dd id="nearest-wrong"></dd></div>
+          <div><dt>Direction withheld</dt><dd id="uncertain"></dd></div>
+          <div><dt>First correct prompt</dt><dd id="lead"></dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+  <section class="card chart" aria-labelledby="timeline-label">
+    <div class="card-head">
+      <h2 id="timeline-label">Main-road confidence</h2>
+      <div class="chart-key note">
+        <span><i class="burst"></i>GPS burst</span><span><b class="prompt">○</b> First prompt</span>
+        <span>Dashed line: 85% prompt threshold</span>
+      </div>
+    </div>
+    <div class="chart-body">
+      <svg id="confidence" viewBox="0 0 760 124" preserveAspectRatio="none" role="img" aria-label="Replay timeline with GPS burst and first prompt"></svg>
+      <p id="sample" class="note"></p>
+    </div>
+  </section>
+</main>
+<footer><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> · One junction, simulated drives</footer>
+</body>
+</html>
