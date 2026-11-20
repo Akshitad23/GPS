@@ -13,7 +13,17 @@ python -m gpsmatch demo --output results/demo
 python -m gpsmatch benchmark --seeds 30 --output results/benchmark_with_slack
 ```
 
-The demo writes a static comparison figure and CSV/JSON outputs. It is not yet an interactive application.
+The `gpsmatch demo` command writes a static comparison figure and CSV/JSON outputs.
+
+## Junction assistant demo
+
+Run `python -m gpsmatch.demo_server` and open [the junction replay](http://127.0.0.1:8765/junction). The replay runs locally with a bundled OpenStreetMap extract, so it needs no map API key or network connection.
+
+1. Select **Clean approach**, then play. The blue line is the planned route. The GPS dot shows the phone reading, and the green ring shows the HMM estimate.
+2. Select **GPS drifts, stay on main road**. Turn on **Show ground truth** and **Compare nearest road**, then drag the timeline to 10 seconds. The HMM favors the service road even though the simulated car is on the main road. The assistant withholds a direction at this point.
+3. Select **GPS drifts, take the exit**. Compare the first prompt and the route across the connector. Scrub to the end to compare wrong-road estimates, time spent uncertain, and how early the prompt appeared.
+
+The map is a small surface-road extract near Kudlu Gate on Hosur Road, Bengaluru. The simulated GPS bursts and trips are reproducible, and the matcher uses only the readings that have arrived by each replay frame. Confidence is the HMM's road-level score. The project evaluates the prompts in replay at this one junction. The bundled JSON includes source way IDs and versions. Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the ODbL.
 
 ## Person 2: calibration study and interactive demo
 

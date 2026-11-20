@@ -1,13 +1,4 @@
-"""Local interactive demo (offline, synthetic). Standard library only.
-
-    python -m gpsmatch.demo_server            # then open http://127.0.0.1:8765
-
-Every request calls the SAME ``run_pipeline`` used by the experiments, and the
-displayed metrics come from ``gpsmatch.evaluation``. Nothing is precomputed or
-edited for display. If a calibration study has been run, the fitted Platt map
-(mixture population) can optionally be applied to the confidence score; it
-never changes which segment is selected.
-"""
+"""Serve the local calibration demo and the Kudlu Gate junction replay."""
 import argparse
 import json
 import math
@@ -18,6 +9,7 @@ from urllib.parse import urlparse, parse_qs
 from .pipeline import Config, run_pipeline
 from . import evaluation as ev
 from .calibration import from_dict
+from .junction import junction_replay
 
 STATIC = Path(__file__).with_name("demo_static")
 DEFAULT_STUDY = Path("results/calibration_study")
@@ -110,6 +102,17 @@ class Handler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path in ("/", "/index.html"):
             self._send(200, (STATIC/"index.html").read_bytes(), "text/html; charset=utf-8")
+        elif url.path in ("/junction", "/junction/"):
+            self._send(200, (STATIC/"junction.html").read_bytes(), "text/html; charset=utf-8")
+        elif url.path == "/junction.js":
+            self._send(200, (STATIC/"junction.js").read_bytes(), "text/javascript; charset=utf-8")
+        elif url.path == "/api/junction/replay":
+            try:
+                scenario = parse_qs(url.query).get("scenario", ["drift-stay"])[0]
+                payload = junction_replay(scenario)
+                self._send(200, json.dumps(payload, allow_nan=False), "application/json")
+            except ValueError as error:
+                self._send(400, json.dumps({"error": str(error)}), "application/json")
         elif url.path == "/api/run":
             try:
                 payload = run_demo(parse_qs(url.query), self.study_dir)
@@ -132,7 +135,7 @@ def main():
     args = parser.parse_args()
     Handler.study_dir = args.study
     server = ThreadingHTTPServer((args.host, args.port), Handler)
-    print(f"Offline synthetic demo at http://{args.host}:{args.port}  (Ctrl+C to stop)", flush=True)
+    print(f"Junction replay at http://{args.host}:{args.port}/junction  (Ctrl+C to stop)", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
